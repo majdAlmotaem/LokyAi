@@ -41,37 +41,58 @@ userInput.addEventListener('keypress', function(e) {
     }
 });
 
-function sendMessage() {
+async function sendMessage() {
     const messageText = userInput.value.trim();
     if (messageText === '') return;
 
-    // Add user message
+    // Display user message
     const userMessage = document.createElement('div');
     userMessage.classList.add('message', 'user-message');
     userMessage.textContent = messageText;
     chatHistory.appendChild(userMessage);
 
-    // Clear input field
+    // Clear input and show loading
     userInput.value = '';
+    const loadingMessage = document.createElement('div');
+    loadingMessage.classList.add('message', 'ai-message');
+    loadingMessage.textContent = 'Generating image...';
+    chatHistory.appendChild(loadingMessage);
 
-    // Scroll to the bottom
+    try {
+        const response = await fetch('http://127.0.0.1:5000/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: messageText })
+        });
+
+        // Remove loading message
+        chatHistory.removeChild(loadingMessage);
+
+        if (response.ok && response.headers.get('content-type').includes('image')) {
+            const blob = await response.blob();
+            const imageUrl = URL.createObjectURL(blob);
+            
+            const imageContainer = document.createElement('div');
+            imageContainer.classList.add('message', 'ai-message');
+            
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            img.classList.add('generated-image');
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+            
+            imageContainer.appendChild(img);
+            chatHistory.appendChild(imageContainer);
+        } else {
+            throw new Error('Invalid response format');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        const errorMessage = document.createElement('div');
+        errorMessage.classList.add('message', 'ai-message');
+        errorMessage.textContent = 'Image generation in progress. Please wait for the model to finish loading.';
+        chatHistory.appendChild(errorMessage);
+    }
+
     chatHistory.scrollTop = chatHistory.scrollHeight;
-
-    // Add typing indicator
-    const typingIndicator = document.createElement('div');
-    typingIndicator.classList.add('message', 'ai-message', 'typing-indicator');
-    typingIndicator.textContent = 'AI is typing...';
-    chatHistory.appendChild(typingIndicator);
-    chatHistory.scrollTop = chatHistory.scrollHeight;
-
-    // Simulate AI response after a delay
-    setTimeout(() => {
-        chatHistory.removeChild(typingIndicator);
-
-        const aiMessage = document.createElement('div');
-        aiMessage.classList.add('message', 'ai-message');
-        aiMessage.textContent = 'This is a cool AI response!';
-        chatHistory.appendChild(aiMessage);
-        chatHistory.scrollTop = chatHistory.scrollHeight;
-    }, 1000);
 }
