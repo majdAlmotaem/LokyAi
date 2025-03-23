@@ -1,61 +1,84 @@
 const chatHistory = document.getElementById('chat-history');
-const userInput = document.getElementById('user-input');
+const startInput = document.querySelector('.start-input-area #user-input');
+const chatInput = document.querySelector('.chat-container #user-input');
 const sendButton = document.getElementById('send-button');
 const newChatButton = document.getElementById('new-chat');
 const chatList = document.getElementById('chat-list');
 const sidebar = document.getElementById('sidebar');
-const chatContainer = document.querySelector('.chat-container');
+const historyToggle = document.getElementById('history-toggle');
+const chatContainer = document.getElementById('chat-container');
+const startScreen = document.getElementById('start-screen');
 
-// Function to add trash icon to chat items
+let isFirstMessage = true;
+let currentInput = startInput;
+
+historyToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('closed');
+});
+
 function addTrashIcon(chatItem) {
     const trashIcon = document.createElement('span');
     trashIcon.classList.add('trash-icon');
     trashIcon.textContent = '🗑️';
     trashIcon.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent chat item click from triggering
+        e.stopPropagation();
         chatItem.remove();
     });
     chatItem.appendChild(trashIcon);
 }
 
-// Initialize existing chat items with trash icons
-document.querySelectorAll('.chat-item').forEach(addTrashIcon);
-
-// New chat functionality (clears current chat)
 newChatButton.addEventListener('click', () => {
     chatHistory.innerHTML = '';
     const newChatItem = document.createElement('div');
     newChatItem.classList.add('chat-item');
-    newChatItem.textContent = `Chat ${chatList.children.length + 1}`;
-    addTrashIcon(newChatItem); // Add trash icon to new chat item
+    newChatItem.textContent = `Image ${chatList.children.length + 1}`;
+    addTrashIcon(newChatItem);
     chatList.insertBefore(newChatItem, chatList.firstChild);
+    
+    startInput.value = '';
+    chatInput.value = '';
+    
+    startScreen.style.display = 'flex';
+    chatContainer.style.display = 'none';
+    isFirstMessage = true;
 });
 
-// Send message on button click
-sendButton.addEventListener('click', sendMessage);
+[startInput, chatInput].forEach(input => {
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            currentInput = input;
+            sendMessage();
+        }
+    });
+});
 
-// Send message on Enter key press
-userInput.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        sendMessage();
-    }
+sendButton.addEventListener('click', () => {
+    currentInput = isFirstMessage ? startInput : chatInput;
+    sendMessage();
 });
 
 async function sendMessage() {
-    const messageText = userInput.value.trim();
-    if (messageText === '') return;
+    const messageText = currentInput.value.trim();
+    if (!messageText) return;
 
-    // Display user message
+    if (isFirstMessage) {
+        startScreen.style.display = 'none';
+        chatContainer.style.display = 'flex';
+        isFirstMessage = false;
+    }
+
     const userMessage = document.createElement('div');
     userMessage.classList.add('message', 'user-message');
     userMessage.textContent = messageText;
     chatHistory.appendChild(userMessage);
 
-    // Clear input and show loading
-    userInput.value = '';
+    currentInput.value = '';
+
     const loadingMessage = document.createElement('div');
-    loadingMessage.classList.add('message', 'ai-message');
-    loadingMessage.textContent = 'Generating image...';
+    loadingMessage.classList.add('message', 'loading-message');
+    const spinner = document.createElement('div');
+    spinner.classList.add('loading-spinner');
+    loadingMessage.appendChild(spinner);
     chatHistory.appendChild(loadingMessage);
 
     try {
@@ -64,33 +87,31 @@ async function sendMessage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: messageText })
         });
-
-        // Remove loading message
+    
         chatHistory.removeChild(loadingMessage);
-
-        if (response.ok && response.headers.get('content-type').includes('image')) {
-            const blob = await response.blob();
-            const imageUrl = URL.createObjectURL(blob);
-            
-            const imageContainer = document.createElement('div');
-            imageContainer.classList.add('message', 'ai-message');
-            
+        const data = await response.json();
+        console.log('Response data:', data); // Add this line to inspect the response
+    
+        const aiMessage = document.createElement('div');
+        aiMessage.classList.add('message', 'ai-message');
+    
+        // Check both possible image URL properties
+        const imageUrl = data.image_url || data.response;
+        if (imageUrl) {
             const img = document.createElement('img');
             img.src = imageUrl;
-            img.classList.add('generated-image');
-            img.style.maxWidth = '100%';
-            img.style.height = 'auto';
-            
-            imageContainer.appendChild(img);
-            chatHistory.appendChild(imageContainer);
-        } else {
-            throw new Error('Invalid response format');
+            img.alt = messageText;
+            img.loading = 'lazy';
+            aiMessage.appendChild(img);
         }
+    
+        chatHistory.appendChild(aiMessage);
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Response error:', error); // Enhanced error logging
+        chatHistory.removeChild(loadingMessage);
         const errorMessage = document.createElement('div');
-        errorMessage.classList.add('message', 'ai-message');
-        errorMessage.textContent = 'Image generation in progress. Please wait for the model to finish loading.';
+        errorMessage.classList.add('message', 'error-message');
+        errorMessage.textContent = 'Network error. Please check your connection.';
         chatHistory.appendChild(errorMessage);
     }
 

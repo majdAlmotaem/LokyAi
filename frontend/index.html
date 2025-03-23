@@ -3,29 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern AI Chat UI</title>
+    <title>Loky AI</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="app-container">
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <h2>Chat History</h2>
-                <button id="new-chat">+ New Chat</button>
-            </div>
-            <div class="chat-list" id="chat-list">
-            </div>
+        <div class="top-bar">
+            <button id="history-toggle">☰</button>
+            <h2>Loky AI</h2>
         </div>
-        <div class="chat-container">
-            <div class="chat-header">
-                <h1>Lokyloc</h1>
+        
+        <div class="content-area">
+            <div class="sidebar closed" id="sidebar">
+                <div class="sidebar-header">
+                    <h2>Image History</h2>
+                    <button id="new-chat">+ New Chat</button>
+                </div>
+                <div class="chat-list" id="chat-list"></div>
             </div>
-            <div class="chat-history" id="chat-history">
-                <!-- Messages will be dynamically added here -->
+
+            <div class="start-screen" id="start-screen">
+                <h1>Loky AI</h1>
+                <p>Your AI image generation assistant. Describe what you want to see.</p>
+                <div class="start-input-area">
+                    <input type="text" id="user-input" placeholder="Describe an image...">
+                    <button id="send-button">➜</button>
+                </div>
             </div>
-            <div class="input-area">
-                <input type="text" id="user-input" placeholder="Ask me anything...">
-                <button id="send-button">Send</button>
+
+            <div class="chat-container" id="chat-container">
+                <div class="chat-history" id="chat-history"></div>
+                <div class="start-input-area">
+                    <input type="text" id="user-input" placeholder="Describe an image...">
+                    <button id="send-button">➜</button>
+                </div>
             </div>
         </div>
     </div>
