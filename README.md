@@ -5,7 +5,8 @@
 
 Loky AI is a locally-hosted AI image generation application that allows you to create images from text descriptions using state-of-the-art diffusion models. The application features a chat-like interface for a seamless user experience.
 
-![Loky AI Screenshot](screenshot.png)
+<img src="https://github.com/user-attachments/assets/75874fd0-2cf9-4914-8485-65079f1f968f" alt="Loky AI Screenshot" />
+
 
 ## Features
 
