@@ -156,9 +156,7 @@ Majd Almotaem - [GitHub](https://github.com/majdAlmotaem)
 
 ````
 
-## 3. MIT License File
-
-```plain text:LICENSE
+LICENSE
 MIT License
 
 Copyright (c) 2024 Majd Almotaem
