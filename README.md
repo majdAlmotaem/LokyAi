@@ -154,8 +154,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Majd Almotaem - [GitHub](https://github.com/majdAlmotaem)
 
-Project Link: [https://github.com/majdAlmotaem/Loky](https://github.com/majdAlmotaem/Loky)
-
 ````
 
 ## 3. MIT License File
