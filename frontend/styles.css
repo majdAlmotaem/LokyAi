@@ -314,6 +314,35 @@ body {
     background: rgba(255, 255, 255, 0.1);
 }
 
+/* New upload button styles */
+.upload-button {
+    position: absolute;
+    left: 25px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    z-index: 5;
+}
+
+.upload-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Adjust textarea padding to make room for upload button */
+.start-input-area #user-input {
+    padding-left: 45px;
+}
+
 .message {
     margin-bottom: 15px;
     padding: 12px;
@@ -381,6 +410,26 @@ body {
     text-align: center;
     padding: 15px;
 }
+
+/* User message with image */
+.user-message-with-image {
+    display: flex;
+    flex-direction: column;
+    background: rgba(30, 30, 30, 0.3);
+    color: white;
+    margin-left: auto;
+    font-size: 16px;
+    font-family: inherit;
+}
+
+.user-message-with-image img {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 8px;
+    margin-top: 10px;
+    align-self: flex-end;
+}
+
 
 /* Modern scrollbar styling */
 ::-webkit-scrollbar {

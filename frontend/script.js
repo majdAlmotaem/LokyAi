@@ -10,11 +10,15 @@ const chatContainer = document.getElementById('chat-container');
 const startScreen = document.getElementById('start-screen');
 const modelSelector = document.getElementById('model-selector');
 const mainContent = document.querySelector('.main-content');
-
+const uploadButton = document.getElementById('upload-button');
+const uploadButtonChat = document.getElementById('upload-button-chat');
+const imageUpload = document.getElementById('image-upload');
+const imageUploadChat = document.getElementById('image-upload-chat');
 
 let isFirstMessage = true;
 let currentInput = startInput;
 let selectedModel = "stabilityai/stable-diffusion-xl-base-1.0"; // Default model
+let uploadedImage = null; // Store the uploaded image as base64
 
 // Function to auto-resize textarea
 function autoResizeTextarea(textarea) {
@@ -48,7 +52,60 @@ function autoResizeTextarea(textarea) {
 modelSelector.addEventListener('change', function() {
     selectedModel = this.value;
     console.log(`Model changed to: ${selectedModel}`);
+    
+    // Update placeholder text based on selected model
+    const placeholderText = selectedModel === "nitrosocke/Ghibli-Diffusion" 
+        ? "Describe an image in Studio Ghibli style..." 
+        : "Describe an image...";
+    
+    startInput.placeholder = placeholderText;
+    chatInput.placeholder = placeholderText;
+    
+    // Show upload buttons for all models (removed model-specific condition)
+    uploadButton.style.display = 'flex';
+    uploadButtonChat.style.display = 'flex';
+    
+    // Clear any uploaded image when changing models
+    uploadedImage = null;
 });
+
+// Initially show upload buttons for all models
+uploadButton.style.display = 'flex';
+uploadButtonChat.style.display = 'flex';
+
+// Handle image upload
+uploadButton.addEventListener('click', () => {
+    imageUpload.click();
+});
+
+uploadButtonChat.addEventListener('click', () => {
+    imageUploadChat.click();
+});
+
+// Process the selected image
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Only allow image files
+    if (!file.type.startsWith('image/')) {
+        alert('Please select an image file.');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        uploadedImage = e.target.result;
+        
+        // Show a notification that image is ready
+        const currentTextarea = isFirstMessage ? startInput : chatInput;
+        currentTextarea.placeholder = "Image ready! Add a description or leave blank...";
+    };
+    reader.readAsDataURL(file);
+}
+
+imageUpload.addEventListener('change', handleImageUpload);
+imageUploadChat.addEventListener('change', handleImageUpload);
 
 console.log("History toggle:", historyToggle);
 console.log("Sidebar:", sidebar);
@@ -98,6 +155,9 @@ newChatButton.addEventListener('click', () => {
     autoResizeTextarea(startInput);
     autoResizeTextarea(chatInput);
     
+    // Clear uploaded image
+    uploadedImage = null;
+    
     startScreen.style.display = 'flex';
     chatContainer.style.display = 'none';
     isFirstMessage = true;
@@ -129,7 +189,12 @@ function scrollToBottom() {
 // Update the sendMessage function to use the new scrolling function
 async function sendMessage() {
     const messageText = currentInput.value.trim();
-    if (!messageText) return;
+    
+    // If there's an uploaded image, we can proceed even without text
+    const hasUploadedImage = uploadedImage !== null;
+    
+    // Only proceed if there's text or we have an uploaded image
+    if (!messageText && !hasUploadedImage) return;
 
     if (isFirstMessage) {
         startScreen.style.display = 'none';
@@ -137,17 +202,47 @@ async function sendMessage() {
         isFirstMessage = false;
     }
 
+    // Create user message element
     const userMessage = document.createElement('div');
-    userMessage.classList.add('message', 'user-message');
-    userMessage.textContent = messageText;
+    
+    // If there's an uploaded image, add it to the message
+    if (uploadedImage) {
+        userMessage.classList.add('message', 'user-message-with-image');
+        
+        // Add text if provided
+        if (messageText) {
+            const textSpan = document.createElement('span');
+            textSpan.textContent = messageText;
+            userMessage.appendChild(textSpan);
+        } else {
+            const textSpan = document.createElement('span');
+            textSpan.textContent = "Transform this image";
+            userMessage.appendChild(textSpan);
+        }
+        
+        // Add the image
+        const img = document.createElement('img');
+        img.src = uploadedImage;
+        img.alt = "Uploaded image";
+        userMessage.appendChild(img);
+    } else {
+        userMessage.classList.add('message', 'user-message');
+        userMessage.textContent = messageText;
+    }
+    
     chatHistory.appendChild(userMessage);
     
     // Scroll after adding user message
     scrollToBottom();
 
     currentInput.value = '';
-    // Reset textarea height after clearing
+    // Reset textarea heights
     autoResizeTextarea(currentInput);
+    
+    // Reset placeholder
+    currentInput.placeholder = selectedModel === "nitrosocke/Ghibli-Diffusion" 
+        ? "Describe an image in Studio Ghibli style..." 
+        : "Describe an image...";
 
     const loadingMessage = document.createElement('div');
     loadingMessage.classList.add('message', 'loading-message');
@@ -160,14 +255,38 @@ async function sendMessage() {
     scrollToBottom();
 
     try {
-        const response = await fetch('http://127.0.0.1:5000/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                message: messageText,
-                model: selectedModel
-            })
-        });
+        let response;
+        
+        if (uploadedImage) {
+            // Use img2img endpoint for any model when image is uploaded
+            response = await fetch('http://127.0.0.1:5000/img2img', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    message: messageText || "transform this image",
+                    image: uploadedImage,
+                    model: selectedModel,  // Send the selected model
+                    strength: 0.6  // Fixed strength value
+                })
+            });
+            
+            // Clear the uploaded image after sending
+            uploadedImage = null;
+            
+        } else {
+            // Use regular text-to-image endpoint
+            response = await fetch('http://127.0.0.1:5000/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    message: messageText,
+                    model: selectedModel
+                })
+            });
+        }
+        
+        // Rest of the function remains the same...
+
     
         chatHistory.removeChild(loadingMessage);
         
@@ -180,7 +299,7 @@ async function sendMessage() {
     
         const img = document.createElement('img');
         img.src = imageUrl;
-        img.alt = messageText;
+        img.alt = messageText || "Generated image";
         img.loading = 'lazy';
         
         // Add an onload event to scroll after the image loads
@@ -206,5 +325,3 @@ async function sendMessage() {
 
 // Also add scroll to bottom when window is resized
 window.addEventListener('resize', scrollToBottom);
-
-

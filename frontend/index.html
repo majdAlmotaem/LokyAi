@@ -28,6 +28,7 @@
                     <select id="model-selector" class="model-selector">
                         <option value="stabilityai/stable-diffusion-xl-base-1.0">Stable Diffusion XL (High Quality)</option>
                         <option value="SG161222/Realistic_Vision_V5.1_noVAE">Realistic Vision (Faster)</option>
+                        <option value="nitrosocke/Ghibli-Diffusion">Studio Ghibli Style</option>
                     </select>
                 </div>
                 
@@ -35,17 +36,21 @@
                     <h1>Loky AI</h1>
                     <p>Your AI image generation assistant. Describe what you want to see.</p>
                     <div class="start-input-area">
+                        <button id="upload-button" class="upload-button">+</button>
                         <textarea id="user-input" placeholder="Describe an image..." rows="1"></textarea>
                         <button id="send-button">➜</button>
                     </div>
+                    <input type="file" id="image-upload" accept="image/*" style="display: none;">
                 </div>
 
                 <div class="chat-container" id="chat-container">
                     <div class="chat-history" id="chat-history"></div>
                     <div class="start-input-area">
+                        <button id="upload-button-chat" class="upload-button">+</button>
                         <textarea id="user-input" placeholder="Describe an image..." rows="1"></textarea>
                         <button id="send-button">➜</button>
                     </div>
+                    <input type="file" id="image-upload-chat" accept="image/*" style="display: none;">
                 </div>
             </div>
         </div>
